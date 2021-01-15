@@ -1,0 +1,30 @@
+{{ define "index"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div class="container">
+        <table>
+            <thead>
+                <th>Имя</th>
+                <th>E-mail</th>
+                <th>Контент</th>
+            </thead>
+            <tbody>
+            {{ range $key, $value := .Posts }}
+            <tr>
+                <td>{{$value.Username}}</td>
+                <td></td>
+                <td>{{$value.Email}}</td>
+                <td>{{$value.Content}}</td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+{{end}}
