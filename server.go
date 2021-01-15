@@ -4,19 +4,29 @@ import (
 	"fmt"
 	"net/http"
 	"github.com/thedevsaddam/renderer"
+	"github.com/gorilla/mux"
 	//"encoding/json"
-	"todo-list/models"
 )
 
 var rnd *renderer.Render
 
-var posts map[string]*models.Post
+var posts map[string]*Post
 
 /* type DataForm struct {
     Name string `json:"username"`
     Email string `json:"email"`
     Content string `json:"content"`
 } */
+
+type Post struct {
+    Username  string
+    Email string
+    Content string
+}
+
+func NewPost(username, email, content string) *Post {
+    return &Post{username, email, content}
+}
 
 func init() {
 	opts := renderer.Options {
@@ -27,9 +37,9 @@ func init() {
 
 func index(w http.ResponseWriter, r *http.Request) {
     data := struct {
-            Posts map[string]*models.Post
+            Posts map[string]*Post
         } {Posts: posts}
-	rnd.HTML(w, http.StatusOK, "index", data)
+	rnd.HTML(w, http.StatusOK, "home", data)
 }
 
 func addtask(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +55,7 @@ func userData(w http.ResponseWriter, r *http.Request) {
         http.Redirect(w, r, "/", 301)
     }
 
-    post := models.NewPost(username, email, content)
+    post := NewPost(username, email, content)
     posts[post.Username] = post
 
     http.Redirect(w, r, "/addtask", 301)
@@ -62,9 +72,12 @@ func userData(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	mux := http.NewServeMux()
-	posts = make(map[string]*models.Post, 0)
+	mux := mux.NewRouter()
+	posts = make(map[string]*Post, 0)
 	fmt.Println(posts)
+	router := mux.StrictSlash(true)
+    router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets/"))))
+	//http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
     mux.HandleFunc("/", index)
     mux.HandleFunc("/addtask", addtask)
     mux.HandleFunc("/userData", userData)
