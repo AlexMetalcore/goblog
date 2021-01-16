@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"github.com/thedevsaddam/renderer"
 	"github.com/gorilla/mux"
+	"crypto/rand"
 	//"encoding/json"
 )
 
@@ -19,13 +20,20 @@ var posts map[string]*Post
 } */
 
 type Post struct {
+    Id  string
     Username  string
     Email string
     Content string
 }
 
-func NewPost(username, email, content string) *Post {
-    return &Post{username, email, content}
+func NewPost(id, username, email, content string) *Post {
+    return &Post{id, username, email, content}
+}
+
+func GenerateId() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
 }
 
 func init() {
@@ -47,6 +55,7 @@ func addtask(w http.ResponseWriter, r *http.Request) {
 }
 
 func userData(w http.ResponseWriter, r *http.Request) {
+    id := GenerateId()
     username := r.PostFormValue("username")
     email := r.PostFormValue("email")
     content := r.PostFormValue("content")
@@ -55,7 +64,7 @@ func userData(w http.ResponseWriter, r *http.Request) {
         http.Redirect(w, r, "/", 301)
     }
 
-    post := NewPost(username, email, content)
+    post := NewPost(id, username, email, content)
     posts[post.Username] = post
 
     http.Redirect(w, r, "/addtask", 301)

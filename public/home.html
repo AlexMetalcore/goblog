@@ -3,21 +3,26 @@
 {{ template "header" }}
 
     <div class="container">
-        <table>
+        <table class="table">
             <thead>
-                <th>Имя</th>
-                <th>E-mail</th>
-                <th>Контент</th>
+                <tr>
+                    <th scope="col">Имя</th>
+                    <th scope="col">E-mail</th>
+                    <th scope="col">Контент</th>
+                    <th scope="col">Действия</th>
+                </tr>
             </thead>
             <tbody>
-            {{ range $key, $value := .Posts }}
-            <tr>
-                <td>{{$value.Username}}</td>
-                <td></td>
-                <td>{{$value.Email}}</td>
-                <td>{{$value.Content}}</td>
-            </tr>
-            {{end}}
+            
+                {{ range $key, $value := .Posts }}
+                    <tr>
+                        <td>{{$value.Username}}</td>
+                        <td>{{$value.Email}}</td>
+                        <td>{{$value.Content}}</td>
+                        <td><a href="editPost/{{$value.Id}}">Редактировать</a></td>
+                    </tr>
+                {{end}}
+            
             </tbody>
         </table>
     </div>
