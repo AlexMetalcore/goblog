@@ -45,8 +45,8 @@ func init() {
 
 func index(w http.ResponseWriter, r *http.Request) {
     data := struct {
-            Posts map[string]*Post
-        } {Posts: posts}
+        Posts map[string]*Post
+    } {Posts: posts}
 	rnd.HTML(w, http.StatusOK, "home", data)
 }
 
@@ -58,8 +58,8 @@ func editPost(w http.ResponseWriter, r *http.Request) {
     id := r.FormValue("id")
     post := posts[id]
     data := struct {
-                Post *Post
-            } {Post: post}
+        Post *Post
+    } {Post: post}
 	rnd.HTML(w, http.StatusOK, "editPost", data)
 }
 
