@@ -19,7 +19,10 @@
                         <td>{{$value.Username}}</td>
                         <td>{{$value.Email}}</td>
                         <td>{{$value.Content}}</td>
-                        <td><a href="/editPost?id={{$value.Id}}">Редактировать</a></td>
+                        <td>
+                            <a href="/editPost?id={{$value.Id}}">Редактировать</a> /
+                            <a href="/deletePost?id={{$value.Id}}">Удалить</a>
+                        </td>
                     </tr>
                 {{end}}
             

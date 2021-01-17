@@ -55,12 +55,27 @@ func addPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func editPost(w http.ResponseWriter, r *http.Request) {
-    id := r.URL.Query()["id"]
-    post := posts[id[0]]
+    id := r.FormValue("id")
+    post := posts[id]
     data := struct {
                 Post *Post
             } {Post: post}
 	rnd.HTML(w, http.StatusOK, "editPost", data)
+}
+
+func deletePost(w http.ResponseWriter, r *http.Request) {
+    id := r.FormValue("id")
+    if (id != "") {
+        if (posts[id] != nil) {
+           if (posts[id].Id != "") {
+              delete(posts, id)
+              http.Redirect(w, r, "/", 301)   
+           } else {
+               http.NotFound(w, r)
+           }   
+        }
+    }
+    http.NotFound(w, r)
 }
 
 func userData(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +118,7 @@ func main() {
     mux.HandleFunc("/", index)
     mux.HandleFunc("/addPost", addPost)
     mux.HandleFunc("/editPost", editPost)
+    mux.HandleFunc("/deletePost", deletePost)
     mux.HandleFunc("/userData", userData)
     port := ":8080"
     fmt.Println("Listening on port ", port)
