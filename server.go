@@ -73,9 +73,6 @@ func userData(w http.ResponseWriter, r *http.Request) {
     } else {
         if (r.PostFormValue("id") != "") {
             id := r.PostFormValue("id")
-            username := r.PostFormValue("username")
-            email := r.PostFormValue("email")
-            content := r.PostFormValue("content")
             posts[id] = &Post{id, username, email, content}
         } else {
             id := GenerateId()
