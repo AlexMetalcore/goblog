@@ -50,24 +50,40 @@ func index(w http.ResponseWriter, r *http.Request) {
 	rnd.HTML(w, http.StatusOK, "home", data)
 }
 
-func addtask(w http.ResponseWriter, r *http.Request) {
-	rnd.HTML(w, http.StatusOK, "addtask", nil)
+func addPost(w http.ResponseWriter, r *http.Request) {
+	rnd.HTML(w, http.StatusOK, "addPost", nil)
+}
+
+func editPost(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query()["id"]
+    post := posts[id[0]]
+    data := struct {
+                Post *Post
+            } {Post: post}
+	rnd.HTML(w, http.StatusOK, "editPost", data)
 }
 
 func userData(w http.ResponseWriter, r *http.Request) {
-    id := GenerateId()
     username := r.PostFormValue("username")
     email := r.PostFormValue("email")
     content := r.PostFormValue("content")
 
     if (username == "" || email == "" || content == "") {
         http.Redirect(w, r, "/", 301)
+    } else {
+        if (r.PostFormValue("id") != "") {
+            id := r.PostFormValue("id")
+            username := r.PostFormValue("username")
+            email := r.PostFormValue("email")
+            content := r.PostFormValue("content")
+            posts[id] = &Post{id, username, email, content}
+        } else {
+            id := GenerateId()
+            post := NewPost(id, username, email, content)
+            posts[post.Id] = post
+        }
+        http.Redirect(w, r, "/addPost", 301)
     }
-
-    post := NewPost(id, username, email, content)
-    posts[post.Username] = post
-
-    http.Redirect(w, r, "/addtask", 301)
 
     /* dataForm := DataForm{username, email, content}
     jsonData, err := json.Marshal(dataForm)
@@ -88,7 +104,8 @@ func main() {
     router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets/"))))
 	//http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
     mux.HandleFunc("/", index)
-    mux.HandleFunc("/addtask", addtask)
+    mux.HandleFunc("/addPost", addPost)
+    mux.HandleFunc("/editPost", editPost)
     mux.HandleFunc("/userData", userData)
     port := ":8080"
     fmt.Println("Listening on port ", port)
