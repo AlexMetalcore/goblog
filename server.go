@@ -6,18 +6,16 @@ import (
 	"github.com/thedevsaddam/renderer"
 	"github.com/gorilla/mux"
 	"crypto/rand"
-	//"encoding/json"
+	"os"
+    "github.com/joho/godotenv"
+    "database/sql"
+    _ "github.com/go-sql-driver/mysql"
 )
 
 var rnd *renderer.Render
-
+var database *sql.DB
+var dbName string
 var posts map[string]*Post
-
-/* type DataForm struct {
-    Name string `json:"username"`
-    Email string `json:"email"`
-    Content string `json:"content"`
-} */
 
 type Post struct {
     Id  string
@@ -44,9 +42,29 @@ func init() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
+    rows, err := database.Query("select * from " + dbName + ".posts")
+
+    if err != nil {
+        fmt.Println(err)
+    }
+
+    defer rows.Close()
+    postsData := []Post{}
+
+    for rows.Next(){
+        post := Post{}
+        err := rows.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
+        if err != nil{
+            fmt.Println(err)
+            continue
+        }
+        postsData = append(postsData, post)
+    }
+
     data := struct {
-        Posts map[string]*Post
-    } {Posts: posts}
+        Posts []Post
+    } {Posts: postsData}
+
 	rnd.HTML(w, http.StatusOK, "home", data)
 }
 
@@ -56,23 +74,42 @@ func addPost(w http.ResponseWriter, r *http.Request) {
 
 func editPost(w http.ResponseWriter, r *http.Request) {
     id := r.FormValue("id")
-    post := posts[id]
+    row := database.QueryRow("select * from "+dbName+".posts WHERE id = ?", id)
+    post := Post{}
+    err := row.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
+
     data := struct {
-        Post *Post
+        Post Post
     } {Post: post}
-	rnd.HTML(w, http.StatusOK, "editPost", data)
+
+    if err != nil{
+        fmt.Println(err)
+        http.Error(w, http.StatusText(404), http.StatusNotFound)
+    } else {
+        rnd.HTML(w, http.StatusOK, "editPost", data)
+    }
 }
 
 func deletePost(w http.ResponseWriter, r *http.Request) {
     id := r.FormValue("id")
     if (id != "") {
-        if (posts[id] != nil) {
-           if (posts[id].Id != "") {
-              delete(posts, id)
-              http.Redirect(w, r, "/", 301)   
-           } else {
-               http.NotFound(w, r)
-           }   
+        row := database.QueryRow("select * from " + dbName + ".posts WHERE id = ?", id)
+        post := Post{}
+        err := row.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
+        if (err != nil) {
+           fmt.Println(err)
+           http.Error(w, http.StatusText(404), http.StatusNotFound)
+        }
+        fmt.Println(post.Id)
+        if (post.Id != "") {
+            _, err := database.Exec("delete from " + dbName + ".posts where id = ?", id)
+            if (err != nil) {
+               fmt.Println(err)
+               http.Error(w, http.StatusText(404), http.StatusNotFound)
+            }
+            http.Redirect(w, r, "/", 301)
+        } else {
+           http.NotFound(w, r)
         }
     }
     http.NotFound(w, r)
@@ -88,33 +125,58 @@ func userData(w http.ResponseWriter, r *http.Request) {
     } else {
         if (r.PostFormValue("id") != "") {
             id := r.PostFormValue("id")
-            posts[id] = &Post{id, username, email, content}
+            row := database.QueryRow("select * from " + dbName + ".posts WHERE id = ?", id)
+            post := Post{}
+            err := row.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
+
+            if (err != nil) {
+               fmt.Println(err)
+               http.Error(w, http.StatusText(404), http.StatusNotFound)
+            }
+
+            if (post.Id != "") {
+                _, err = database.Exec("update " + dbName + ".posts set username=?, email=?, content = ? where id = ?", username, email, content, post.Id)
+            } else {
+                _, err = database.Exec("insert into " + dbName + ".posts (username, email, content) values (?, ?, ?)", username, email, content)
+            }
         } else {
-            id := GenerateId()
-            post := NewPost(id, username, email, content)
-            posts[post.Id] = post
+            _, err := database.Exec("insert into " + dbName + ".posts (username, email, content) values (?, ?, ?)", username, email, content)
+
+            if (err != nil) {
+                fmt.Println(err)
+            }
         }
+
         http.Redirect(w, r, "/addPost", 301)
     }
-
-    /* dataForm := DataForm{username, email, content}
-    jsonData, err := json.Marshal(dataForm)
-    if (err != nil) {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
-    w.Write(jsonData) */
 }
 
 func main() {
+    e := godotenv.Load()
+
+	if e != nil {
+		fmt.Print(e)
+	}
+
+	username := os.Getenv("db_user")
+	password := os.Getenv("db_pass")
+	dbName := os.Getenv("db_name")
+	dbHost := os.Getenv("db_host")
+	dbPort := os.Getenv("db_port")
+
+    db, err := sql.Open("mysql", ""+username+":"+password+"@tcp("+dbHost+":"+dbPort+")/"+dbName+"")
+
+    if err != nil {
+        fmt.Println(err)
+    }
+    database = db
+    defer db.Close()
+
 	mux := mux.NewRouter()
 	posts = make(map[string]*Post, 0)
 	fmt.Println(posts)
 	router := mux.StrictSlash(true)
     router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets/"))))
-	//http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
     mux.HandleFunc("/", index)
     mux.HandleFunc("/addPost", addPost)
     mux.HandleFunc("/editPost", editPost)
