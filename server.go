@@ -7,8 +7,10 @@ import (
 	"github.com/gorilla/mux"
 	"os"
     "github.com/joho/godotenv"
+    "github.com/AndyEverLie/go-pagination-bootstrap"
     "database/sql"
     _ "github.com/go-sql-driver/mysql"
+    "strconv"
 )
 
 var rnd *renderer.Render
@@ -30,7 +32,15 @@ func init() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-    rows, err := database.Query("select * from " + dbName + ".posts ORDER BY id DESC")
+    /* page := 1
+    if (r.FormValue("page") != "") {
+        page, err := strconv.Atoi(r.FormValue("page"))
+        if (err != nil) {
+           fmt.Println(err)
+        }
+    } */
+
+    rows, err := database.Query("SELECT * FROM " + dbName + ".posts ORDER BY id DESC")
 
     if (err != nil) {
         fmt.Println(err)
@@ -49,9 +59,27 @@ func index(w http.ResponseWriter, r *http.Request) {
         postsData = append(postsData, post)
     }
 
+    var count int
+    stmt, err := database.Prepare("SELECT COUNT(*) as count FROM " + dbName + ".posts")
+    if err != nil {
+        fmt.Println(err)
+    }
+    err = stmt.QueryRow().Scan(&count)
+    if err != nil {
+        fmt.Println(err)
+    }
+
+    page, err := strconv.Atoi(r.FormValue("page"))
+            if (err != nil) {
+               fmt.Println(err)
+            }
+
+    pager := pagination.New(count, 1, page, "/")
+
     data := struct {
         Posts []Post
-    } {Posts: postsData}
+        Render *pagination.Pagination
+    } {Posts: postsData, Render: pager}
 
 	rnd.HTML(w, http.StatusOK, "home", data)
 }
@@ -62,7 +90,7 @@ func addPost(w http.ResponseWriter, r *http.Request) {
 
 func editPost(w http.ResponseWriter, r *http.Request) {
     id := r.FormValue("id")
-    row := database.QueryRow("select * from " + dbName + ".posts WHERE id = ?", id)
+    row := database.QueryRow("SELECT * FROM " + dbName + ".posts WHERE id = ?", id)
     post := Post{}
     err := row.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
 
@@ -81,7 +109,7 @@ func editPost(w http.ResponseWriter, r *http.Request) {
 func deletePost(w http.ResponseWriter, r *http.Request) {
     id := r.FormValue("id")
     if (id != "") {
-        row := database.QueryRow("select * from " + dbName + ".posts WHERE id = ?", id)
+        row := database.QueryRow("SELECT * FROM " + dbName + ".posts WHERE id = ?", id)
         post := Post{}
         err := row.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
 
@@ -91,7 +119,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
         }
 
         if (post.Id != "") {
-            _, err := database.Exec("delete from " + dbName + ".posts where id = ?", id)
+            _, err := database.Exec("DELETE FROM " + dbName + ".posts where id = ?", id)
             if (err != nil) {
                http.Error(w, http.StatusText(404), http.StatusNotFound)
             }
@@ -113,7 +141,7 @@ func userData(w http.ResponseWriter, r *http.Request) {
     } else {
         if (r.PostFormValue("id") != "") {
             id := r.PostFormValue("id")
-            row := database.QueryRow("select * from " + dbName + ".posts WHERE id = ?", id)
+            row := database.QueryRow("SELECT * FROM " + dbName + ".posts WHERE id = ?", id)
             post := Post{}
             err := row.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
 
@@ -123,14 +151,14 @@ func userData(w http.ResponseWriter, r *http.Request) {
             }
 
             if (post.Id != "") {
-                _, err = database.Exec("update " + dbName + ".posts set username=?, email=?, content = ? where id = ?",
+                _, err = database.Exec("UPDATE " + dbName + ".posts set username=?, email=?, content = ? where id = ?",
                 username, email, content, post.Id)
             } else {
-                _, err = database.Exec("insert into " + dbName + ".posts (username, email, content) values (?, ?, ?)",
+                _, err = database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) values (?, ?, ?)",
                 username, email, content)
             }
         } else {
-            _, err := database.Exec("insert into " + dbName + ".posts (username, email, content) values (?, ?, ?)",
+            _, err := database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) values (?, ?, ?)",
             username, email, content)
 
             if (err != nil) {
