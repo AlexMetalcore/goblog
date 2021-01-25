@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"github.com/thedevsaddam/renderer"
 	"github.com/gorilla/mux"
-	"crypto/rand"
 	"os"
     "github.com/joho/godotenv"
     "database/sql"
@@ -15,23 +14,12 @@ import (
 var rnd *renderer.Render
 var database *sql.DB
 var dbName string
-var posts map[string]*Post
 
 type Post struct {
     Id  string
     Username  string
     Email string
     Content string
-}
-
-func NewPost(id, username, email, content string) *Post {
-    return &Post{id, username, email, content}
-}
-
-func GenerateId() string {
-	b := make([]byte, 16)
-	rand.Read(b)
-	return fmt.Sprintf("%x", b)
 }
 
 func init() {
@@ -44,17 +32,17 @@ func init() {
 func index(w http.ResponseWriter, r *http.Request) {
     rows, err := database.Query("select * from " + dbName + ".posts")
 
-    if err != nil {
+    if (err != nil) {
         fmt.Println(err)
     }
 
     defer rows.Close()
     postsData := []Post{}
 
-    for rows.Next(){
+    for rows.Next() {
         post := Post{}
         err := rows.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
-        if err != nil{
+        if (err != nil) {
             fmt.Println(err)
             continue
         }
@@ -74,7 +62,7 @@ func addPost(w http.ResponseWriter, r *http.Request) {
 
 func editPost(w http.ResponseWriter, r *http.Request) {
     id := r.FormValue("id")
-    row := database.QueryRow("select * from "+dbName+".posts WHERE id = ?", id)
+    row := database.QueryRow("select * from " + dbName + ".posts WHERE id = ?", id)
     post := Post{}
     err := row.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
 
@@ -96,15 +84,15 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
         row := database.QueryRow("select * from " + dbName + ".posts WHERE id = ?", id)
         post := Post{}
         err := row.Scan(&post.Id, &post.Username, &post.Email, &post.Content)
+
         if (err != nil) {
            fmt.Println(err)
            http.Error(w, http.StatusText(404), http.StatusNotFound)
         }
-        fmt.Println(post.Id)
+
         if (post.Id != "") {
             _, err := database.Exec("delete from " + dbName + ".posts where id = ?", id)
             if (err != nil) {
-               fmt.Println(err)
                http.Error(w, http.StatusText(404), http.StatusNotFound)
             }
             http.Redirect(w, r, "/", 301)
@@ -135,12 +123,15 @@ func userData(w http.ResponseWriter, r *http.Request) {
             }
 
             if (post.Id != "") {
-                _, err = database.Exec("update " + dbName + ".posts set username=?, email=?, content = ? where id = ?", username, email, content, post.Id)
+                _, err = database.Exec("update " + dbName + ".posts set username=?, email=?, content = ? where id = ?",
+                username, email, content, post.Id)
             } else {
-                _, err = database.Exec("insert into " + dbName + ".posts (username, email, content) values (?, ?, ?)", username, email, content)
+                _, err = database.Exec("insert into " + dbName + ".posts (username, email, content) values (?, ?, ?)",
+                username, email, content)
             }
         } else {
-            _, err := database.Exec("insert into " + dbName + ".posts (username, email, content) values (?, ?, ?)", username, email, content)
+            _, err := database.Exec("insert into " + dbName + ".posts (username, email, content) values (?, ?, ?)",
+            username, email, content)
 
             if (err != nil) {
                 fmt.Println(err)
@@ -154,7 +145,7 @@ func userData(w http.ResponseWriter, r *http.Request) {
 func main() {
     e := godotenv.Load()
 
-	if e != nil {
+	if (e != nil) {
 		fmt.Print(e)
 	}
 
@@ -164,17 +155,16 @@ func main() {
 	dbHost := os.Getenv("db_host")
 	dbPort := os.Getenv("db_port")
 
-    db, err := sql.Open("mysql", ""+username+":"+password+"@tcp("+dbHost+":"+dbPort+")/"+dbName+"")
+    db, err := sql.Open("mysql", "" + username + ":" + password + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "")
 
-    if err != nil {
+    if (err != nil) {
         fmt.Println(err)
     }
+
     database = db
     defer db.Close()
 
 	mux := mux.NewRouter()
-	posts = make(map[string]*Post, 0)
-	fmt.Println(posts)
 	router := mux.StrictSlash(true)
     router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets/"))))
     mux.HandleFunc("/", index)
