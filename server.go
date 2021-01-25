@@ -30,7 +30,7 @@ func init() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-    rows, err := database.Query("select * from " + dbName + ".posts")
+    rows, err := database.Query("select * from " + dbName + ".posts ORDER BY id DESC")
 
     if (err != nil) {
         fmt.Println(err)
