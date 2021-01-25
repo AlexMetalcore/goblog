@@ -82,7 +82,7 @@ func editPost(w http.ResponseWriter, r *http.Request) {
         Post Post
     } {Post: post}
 
-    if err != nil{
+    if (err != nil) {
         fmt.Println(err)
         http.Error(w, http.StatusText(404), http.StatusNotFound)
     } else {

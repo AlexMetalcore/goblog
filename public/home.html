@@ -6,6 +6,7 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th scope="col">ID</th>
                     <th scope="col">Имя</th>
                     <th scope="col">E-mail</th>
                     <th scope="col">Контент</th>
@@ -16,6 +17,7 @@
             
                 {{ range $key, $value := .Posts }}
                     <tr>
+                        <td>{{$value.Id}}</td>
                         <td>{{$value.Username}}</td>
                         <td>{{$value.Email}}</td>
                         <td>{{$value.Content}}</td>
