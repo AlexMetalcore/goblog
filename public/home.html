@@ -3,7 +3,7 @@
 {{ template "header" }}
 
     <div class="container">
-        <table class="table">
+        <table class="table table-striped table-bordered" id="sortTable">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
@@ -29,10 +29,20 @@
                 {{end}}
             </tbody>
         </table>
-        <div class="text-center">
+        <!--<div class="text-center">
             {{ .Render.Render }}
-        </div>
+        </div>-->
     </div>
+
+<script>
+    $('#sortTable').DataTable({
+        "order": [[ 3, "desc" ]],
+        "pageLength": 3,
+        "lengthChange": false,
+        searching: true,
+        select: false
+    });
+</script>
 
 {{ template "footer" }}
 

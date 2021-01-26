@@ -46,7 +46,7 @@ func index(w http.ResponseWriter, r *http.Request) {
         fmt.Println(err)
     }
 
-    page := "1"
+    /* page := "1"
     if (r.FormValue("page") != "") {
         page = r.FormValue("page")
     }
@@ -57,10 +57,12 @@ func index(w http.ResponseWriter, r *http.Request) {
         fmt.Println(err)
     }
 
-    limit := 2
+    limit := 3
     offset := limit * (pagePrepare - 1)
 
-    rows, err := database.Query("SELECT * FROM " + dbName + ".posts ORDER BY id DESC LIMIT " + strconv.Itoa(offset) + ", " + strconv.Itoa(limit) + "")
+    rows, err := database.Query("SELECT * FROM " + dbName + ".posts ORDER BY id DESC LIMIT " + strconv.Itoa(offset) + ", " + strconv.Itoa(limit) + "") */
+
+    rows, err := database.Query("SELECT * FROM " + dbName + ".posts ORDER BY id DESC")
 
     if (err != nil) {
         fmt.Println(err)
@@ -84,7 +86,8 @@ func index(w http.ResponseWriter, r *http.Request) {
         fmt.Println(err)
     }
 
-    pager := pagination.New(count, limit, current, "/")
+    //pager := pagination.New(count, limit, current, "/")
+    pager := pagination.New(count, 1, current, "/")
 
     data := struct {
         Posts []Post
