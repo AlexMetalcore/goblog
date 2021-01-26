@@ -167,11 +167,11 @@ func userData(w http.ResponseWriter, r *http.Request) {
                 _, err = database.Exec("UPDATE " + dbName + ".posts set username=?, email=?, content = ? where id = ?",
                 username, email, content, post.Id)
             } else {
-                _, err = database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) values (?, ?, ?)",
+                _, err = database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) VALUES (?, ?, ?)",
                 username, email, content)
             }
         } else {
-            _, err := database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) values (?, ?, ?)",
+            _, err := database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) VALUES (?, ?, ?)",
             username, email, content)
 
             if (err != nil) {
