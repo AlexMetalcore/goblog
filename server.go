@@ -62,7 +62,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 
     rows, err := database.Query("SELECT * FROM " + dbName + ".posts ORDER BY id DESC LIMIT " + strconv.Itoa(offset) + ", " + strconv.Itoa(limit) + "") */
 
-    rows, err := database.Query("SELECT * FROM " + dbName + ".posts ORDER BY id DESC")
+    rows, err := database.Query("SELECT * FROM " + dbName + ".posts")
 
     if (err != nil) {
         fmt.Println(err)
