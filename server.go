@@ -34,15 +34,15 @@ func init() {
 func index(w http.ResponseWriter, r *http.Request) {
 
     var count int
-    stmt, err := database.Prepare("SELECT COUNT(*) as count FROM " + dbName + ".posts")
+    countPosts, err := database.Prepare("SELECT COUNT(*) as count FROM " + dbName + ".posts")
 
-    if err != nil {
+    if (err != nil) {
        fmt.Println(err)
     }
 
-    err = stmt.QueryRow().Scan(&count)
+    err = countPosts.QueryRow().Scan(&count)
 
-    if err != nil {
+    if (err != nil) {
         fmt.Println(err)
     }
 
