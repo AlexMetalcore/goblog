@@ -32,15 +32,35 @@ func init() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-    /* page := 1
-    if (r.FormValue("page") != "") {
-        page, err := strconv.Atoi(r.FormValue("page"))
-        if (err != nil) {
-           fmt.Println(err)
-        }
-    } */
 
-    rows, err := database.Query("SELECT * FROM " + dbName + ".posts ORDER BY id DESC")
+    var count int
+    stmt, err := database.Prepare("SELECT COUNT(*) as count FROM " + dbName + ".posts")
+
+    if err != nil {
+       fmt.Println(err)
+    }
+
+    err = stmt.QueryRow().Scan(&count)
+
+    if err != nil {
+        fmt.Println(err)
+    }
+
+    page := "1"
+    if (r.FormValue("page") != "") {
+        page = r.FormValue("page")
+    }
+
+    pagePrepare, err := strconv.Atoi(page)
+
+    if (err != nil) {
+        fmt.Println(err)
+    }
+
+    limit := 2
+    offset := limit * (pagePrepare - 1)
+
+    rows, err := database.Query("SELECT * FROM " + dbName + ".posts ORDER BY id DESC LIMIT " + strconv.Itoa(offset) + ", " + strconv.Itoa(limit) + "")
 
     if (err != nil) {
         fmt.Println(err)
@@ -59,22 +79,12 @@ func index(w http.ResponseWriter, r *http.Request) {
         postsData = append(postsData, post)
     }
 
-    var count int
-    stmt, err := database.Prepare("SELECT COUNT(*) as count FROM " + dbName + ".posts")
-    if err != nil {
-        fmt.Println(err)
-    }
-    err = stmt.QueryRow().Scan(&count)
-    if err != nil {
+    current, err := strconv.Atoi(r.FormValue("page"))
+    if (err != nil) {
         fmt.Println(err)
     }
 
-    page, err := strconv.Atoi(r.FormValue("page"))
-            if (err != nil) {
-               fmt.Println(err)
-            }
-
-    pager := pagination.New(count, 1, page, "/")
+    pager := pagination.New(count, limit, current, "/")
 
     data := struct {
         Posts []Post
