@@ -150,7 +150,7 @@ func userData(w http.ResponseWriter, r *http.Request) {
     content := r.PostFormValue("content")
 
     if (username == "" || email == "" || content == "") {
-        http.Redirect(w, r, "/", 301)
+        http.Redirect(w, r, "/addPost", 301)
     } else {
         if (r.PostFormValue("id") != "") {
             id := r.PostFormValue("id")
