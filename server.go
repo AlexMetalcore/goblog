@@ -1,16 +1,16 @@
 package main
 
 import (
+    "os"
 	"fmt"
 	"net/http"
-	"github.com/thedevsaddam/renderer"
+	"strconv"
+	"database/sql"
 	"github.com/gorilla/mux"
-	"os"
     "github.com/joho/godotenv"
-    "github.com/AndyEverLie/go-pagination-bootstrap"
-    "database/sql"
+    "github.com/thedevsaddam/renderer"
     _ "github.com/go-sql-driver/mysql"
-    "strconv"
+    "github.com/AndyEverLie/go-pagination-bootstrap"
 )
 
 var rnd *renderer.Render
@@ -137,11 +137,10 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
                http.Error(w, http.StatusText(404), http.StatusNotFound)
             }
             http.Redirect(w, r, "/", 301)
-        } else {
-           http.NotFound(w, r)
         }
+    } else {
+        http.NotFound(w, r)
     }
-    http.NotFound(w, r)
 }
 
 func userData(w http.ResponseWriter, r *http.Request) {
