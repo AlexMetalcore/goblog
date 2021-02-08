@@ -3,8 +3,9 @@ package main
 import (
     "os"
 	"fmt"
-	"net/http"
+	"regexp"
 	"strconv"
+	"net/http"
 	"database/sql"
 	"github.com/gorilla/mux"
     "github.com/joho/godotenv"
@@ -16,6 +17,7 @@ import (
 var rnd *renderer.Render
 var database *sql.DB
 var dbName string
+var errorEmail string
 
 type Post struct {
     Id  string
@@ -92,7 +94,8 @@ func index(w http.ResponseWriter, r *http.Request) {
     data := struct {
         Posts []Post
         Render *pagination.Pagination
-    } {Posts: postsData, Render: pager}
+        Email string
+    } {Posts: postsData, Render: pager, Email: errorEmail}
 
 	rnd.HTML(w, http.StatusOK, "home", data)
 }
@@ -166,15 +169,23 @@ func userData(w http.ResponseWriter, r *http.Request) {
                 _, err = database.Exec("UPDATE " + dbName + ".posts set username=?, email=?, content = ? where id = ?",
                 username, email, content, post.Id)
             } else {
-                _, err = database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) VALUES (?, ?, ?)",
-                username, email, content)
+                if m, _ := regexp.MatchString(`^([\w\.\_]{2,10})@(\w{1,}).([a-z]{2,4})$`, email); !m {
+                   errorEmail = "Не верный формат e-mail " + email
+                } else {
+                    errorEmail = ""
+                    _, err = database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) VALUES (?, ?, ?)", username, email, content)
+                }
             }
         } else {
-            _, err := database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) VALUES (?, ?, ?)",
-            username, email, content)
-
-            if (err != nil) {
-                fmt.Println(err)
+            if m, _ := regexp.MatchString(`^([\w\.\_]{2,10})@(\w{1,}).([a-z]{2,4})$`, email); !m {
+                errorEmail = "Не верный формат e-mail " + email
+            } else {
+                _, err := database.Exec("INSERT INTO " + dbName + ".posts (username, email, content) VALUES (?, ?, ?)",
+                username, email, content)
+                errorEmail = ""
+                if (err != nil) {
+                    fmt.Println(err)
+                }
             }
         }
 
