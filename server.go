@@ -166,8 +166,12 @@ func userData(w http.ResponseWriter, r *http.Request) {
             }
 
             if (post.Id != "") {
-                _, err = database.Exec("UPDATE " + dbName + ".posts set username=?, email=?, content = ? where id = ?",
-                username, email, content, post.Id)
+                if m, _ := regexp.MatchString(`^([\w\.\_]{2,10})@(\w{1,}).([a-z]{2,4})$`, email); !m {
+                     errorEmail = "Не верный формат e-mail " + email
+                } else {
+                    errorEmail = ""
+                    _, err = database.Exec("UPDATE " + dbName + ".posts set username=?, email=?, content = ? where id = ?",username, email, content, post.Id)
+                }
             } else {
                 if m, _ := regexp.MatchString(`^([\w\.\_]{2,10})@(\w{1,}).([a-z]{2,4})$`, email); !m {
                    errorEmail = "Не верный формат e-mail " + email
